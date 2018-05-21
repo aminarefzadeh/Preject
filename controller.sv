@@ -97,8 +97,10 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	     pcWrite <= 1'b1;
 	   end
 	   ID:begin
-	     if(ins[7:5] == 3'b000 || ins[7:5] == 3'b010 || ins[7:5] == 3'b011 || ins[7:5] == 3'b001 || ins[7:5] == 3'b110)
+	     if(ins[7:5] == 3'b000 || ins[7:5] == 3'b010 || ins[7:5] == 3'b011 || ins[7:5] == 3'b001 || ins[7:5] == 3'b110)begin
 	       TRld <= 1'b1;
+	       pcWrite <= 1'b1;
+	     end
 	   end
 	   J:begin
 	     jmpSignal <= 1'b1;
@@ -163,6 +165,7 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	    CZNld <= 1'b1;
 	  end
  	  SW:begin
+ 	    RA2sel <= 1'b1;
 	    selB <= 1'b1;
 	    IorD <= 1'b1;
 	    memWrite <= 1'b1;

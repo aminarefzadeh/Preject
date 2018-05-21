@@ -1,6 +1,6 @@
 module registerFile(input[1:0] RR1,RR2,WR,input[7:0] WD,input W,clk,rst,output logic [7:0] RD1,RD2);
   logic[3:0][7:0] registers;
-  always@ (RR1,RR2) begin
+  always@ (RR1,RR2,clk) begin
     RD1 <= registers[RR1];
     RD2 <= registers[RR2];
   end
