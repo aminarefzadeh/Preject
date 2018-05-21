@@ -44,7 +44,7 @@ module memory(input [12:0]addr ,input[7:0] WR,input clk,memorywrite,memoryread,o
     Memory[39] <= 8'b11100000;
     Memory[40] <= 8'b00100111;
     Memory[41] <= 8'b11010001;
-    Memory[999] <= 8'b00000110;
+    Memory[999] <= 8'b00000000;
     Memory[1000] <= 8'b11101001;
     Memory[1001] <= 8'b11101001;
     Memory[1002] <= 8'b11101001;

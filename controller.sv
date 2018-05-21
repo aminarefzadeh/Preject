@@ -6,7 +6,7 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
  	output reg[1:0] aluOp; 	
  	reg[3:0] state;
  	reg[3:0] nextState;
- 	parameter IF = 4'd0, ID = 4'd1, J = 4'd2, ACU1 = 4'd3, ACU2 = 4'd4, ADDR1 = 4'd5, LW1 = 4'd6, ADDR2 = 4'd7, ADDR3 = 4'd8, SW = 4'd10, DI = 4'd11;
+ 	parameter IF = 4'd0, ID = 4'd1, J = 4'd2, ACU1 = 4'd3, ACU2 = 4'd4, ADDR1 = 4'd5, LW1 = 4'd6, ADDR2 = 4'd7, ADDR3 = 4'd8,LW2=4'd9, SW = 4'd10, DI = 4'd11;
  	
  	
  	always@(ins,state) begin
@@ -45,7 +45,10 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	       nextState <= ADDR2;
 	   end
 	   LW1:begin
-	     nextState <=IF;
+	     nextState <= LW2;
+    end
+    LW2:begin
+      nextState <= IF;
     end
 	  ADDR2:begin
 	    nextState <= ADDR3;
@@ -148,8 +151,10 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	     IorD <= 1'b1;
 	     memRead <= 1'b1;
 	     MDRld <= 1'b1;
-	     RA2sel <= 1'b1;
-	     WAsel <= 1'b1;
+    end
+    LW2:begin
+      RA2sel <= 1'b1;
+      WAsel <= 1'b1;
 	     WDsel <= 1'b0;
 	     regWrite <= 1'b1;
     end
