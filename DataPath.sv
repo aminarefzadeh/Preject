@@ -1,7 +1,7 @@
 
 module DataPath(input clk,rst,DIld,CZNld,WASel,WDSel,jmpsignal,ALU1Sel,ALU2Sel,RA2Sel,RegWrite,pcWrite,IRld,MDRld,TRld,IorD,memorywrite,memoryread,input[1:0] fun,output reg[7:0] IRout);
   wire[12:0] pc_1,TRout,nextPc,pcWire,memAddr;
-  wire[7:0] Bout,MemOut,MDRout;
+  wire[7:0] Bout,Aout,MemOut,MDRout;
   wire PcJmp;
   wire[1:0] RA2,WA;
   wire [7:0] WD,RD2,RD1;
@@ -15,20 +15,17 @@ module DataPath(input clk,rst,DIld,CZNld,WASel,WDSel,jmpsignal,ALU1Sel,ALU2Sel,R
   pc  PcReg (nextPc,clk,rst,pcWrite,pcWire);
   Inc inc(pcWire ,pc_1);
   mux_13  memMux(pcWire ,TRout,IorD ,memAddr);
-  memory Mem(memAddr ,Bout,clk,memorywrite,memoryread,MemOut);
+  memory Mem(memAddr ,Bout,clk,rst,memorywrite,memoryread,MemOut);
   register8 InsReg(MemOut,clk,rst,IRld,IRout);
   register13 TRReg({IRout[4:0],MemOut},clk,rst,TRld,TRout);
   register8 MemReg(MemOut,clk,rst,MDRld,MDRout);
   mux_2 RA2Mux(IRout[3:2],DI[4:3] , RA2Sel , RA2);
   mux_2 WA2Mux(IRout[3:2],DI[4:3] , WASel , WA);
   mux_8 WDMux (MDRout,ALUout,WDSel ,WD);
-  registerFile RF (IRout[1:0],RA2,WA,WD,RegWrite,clk,rst,RD1,RD2);
-  register8 RegA(RD1,clk,rst,1'b1,Aout);
-  register8 RegB(RD2,clk,rst, 1'b1 ,Bout);
+  registerFile RF (IRout[1:0],RA2,WA,WD,RegWrite,clk,rst,Aout,Bout);
   mux_8 ALU1Mux (Bout,8'b0,ALU1Sel ,ALU1);
   mux_8 ALU2Mux (MDRout,Aout,ALU2Sel ,ALU2);
-  alu LU(fun , ALU1 , ALU2,Cout ,ALUans ,zero,cout,negetive);
-  register8 AluReg(ALUans,clk,rst,1'b1,ALUout);
+  alu LU(fun , ALU1 , ALU2,Cout ,ALUout ,zero,cout,negetive);
   register3 czn({cout,zero,negetive},clk,rst,CZNld,{Cout,Zout,Nout});
   register5 DIReg(IRout[4:0],clk,rst,DIld,DI);
   mux4_1 JMPMux(1'b0 ,Cout,Zout , Nout ,DI[1:0] ,JMPout);

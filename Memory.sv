@@ -1,7 +1,12 @@
 
-module memory(input [12:0]addr ,input[7:0] WR,input clk,memorywrite,memoryread,output logic[7:0] RD);
+module memory(input [12:0]addr ,input[7:0] WD,input clk,rst,memorywrite,memoryread,output logic[7:0] RD);
   logic [8191:0] [7:0] Memory;
   always@(addr,memoryread)begin
+    if (memoryread)
+      RD <= Memory[addr];
+  end
+  always@(posedge clk,rst) begin
+    if (rst)begin
     Memory[0] <= 8'b11110000;
     Memory[1] <= 8'b00000011;
     Memory[2] <= 8'b11100111;
@@ -46,7 +51,7 @@ module memory(input [12:0]addr ,input[7:0] WR,input clk,memorywrite,memoryread,o
     Memory[41] <= 8'b11010001;
     Memory[999] <= 8'b00000000;
     Memory[1000] <= 8'b11101001;
-    Memory[1001] <= 8'b11101001;
+    Memory[1001] <= 8'b00001111;
     Memory[1002] <= 8'b11101001;
     Memory[1003] <= 8'b11101001;
     Memory[1004] <= 8'b11101001;
@@ -55,10 +60,8 @@ module memory(input [12:0]addr ,input[7:0] WR,input clk,memorywrite,memoryread,o
     Memory[1007] <= 8'b11101001;
     Memory[1008] <= 8'b11101001;
     Memory[1009] <= 8'b11101001;
-    RD <= Memory[addr];
-  end
-  always@(posedge clk) begin
-    if (memorywrite)
-      Memory[addr] <= WR;
+    end
+    else if (memorywrite)
+      Memory[addr] <= WD;
   end
 endmodule

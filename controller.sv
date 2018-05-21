@@ -6,8 +6,8 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
  	output reg[1:0] aluOp; 	
  	reg[3:0] state;
  	reg[3:0] nextState;
- 	parameter IF = 4'd0, ID = 4'd1, J = 4'd2, ACU1 = 4'd3, ACU2 = 4'd4, ADDR1 = 4'd5, LW1 = 4'd6, ADDR2 = 4'd7, ADDR3 = 4'd8,LW2=4'd9, SW = 4'd10, DI = 4'd11;
- 	
+ 	parameter IF = 4'd0, ID = 4'd1, J = 4'd2, ACU1 = 4'd3, ACU2= 4'd4, ADDR1 = 4'd5, LW1 = 4'd6, ADDR2 = 4'd7, ADDR3 = 4'd8,LW2=4'd9, SW = 4'd10, DI = 4'd11;
+ 	// debug CZN load
  	
  	always@(ins,state) begin
 	   case(state)
@@ -20,8 +20,11 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	     end
 	     else if(ins[7:6] == 2'b10)
 	       nextState <= ACU1;
-	     else if(ins[7:5] == 3'b000 || ins[7:5] == 3'b010 || ins[7:5] == 3'b011 )begin
-	       nextState <= ADDR1;
+	     else if(ins[7:5] == 3'b000 )begin
+	       nextState <= LW1;
+	     end
+	     else if (ins[7:5] == 3'b010 || ins[7:5] == 3'b011 )begin
+	       nextState <= ADDR2;
 	     end
 	     else if(ins[7:5] == 3'b001)
 	       nextState <= SW;
@@ -32,17 +35,7 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	     nextState <=IF;
 	   end
 	   ACU1:begin
-	       nextState <=ACU2;
-	   end
-	   ACU2:begin
-	     nextState <=IF;
-	   end
-	   
-	   ADDR1:begin
-	     if(ins[6] == 1'b0)
-	       nextState <=LW1;
-	     else if(ins[6] == 1'b1)
-	       nextState <= ADDR2;
+	       nextState <=IF;
 	   end
 	   LW1:begin
 	     nextState <= LW2;
@@ -104,49 +97,42 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	     pcWrite <= 1'b1;
 	   end
 	   ID:begin
-	     if(ins[7:5] == 3'b110)
-	       memRead <= 1'b1;
-	     else if(ins[7:5] == 3'b000 || ins[7:5] == 3'b010 || ins[7:5] == 3'b011 )
+	     if(ins[7:5] == 3'b000 || ins[7:5] == 3'b010 || ins[7:5] == 3'b011 || ins[7:5] == 3'b001 || ins[7:5] == 3'b110)
 	       TRld <= 1'b1;
 	   end
 	   J:begin
-	     TRld <= 1'b1;
 	     jmpSignal <= 1'b1;
 	     pcWrite <= 1'b1;
 	   end
 	   ACU1:begin
 	     RA2sel <= 1'b0;
-	     WAsel <= 1'b0;
-	     WDsel <= 1'b1;
-	     selA <= 1'b1;
+	     selB <= 1'b1;
 	     //move
 	     if(ins[5:4] == 2'b00)begin
-	       selB <= 1'b1;
+	       selA <= 1'b1;
 	       aluOp <= 2'b00;
 	     end
 	     //add
 	     else if(ins[5:4] == 2'b01)begin
-	       selB <= 1'b0;
+	       selA <= 1'b0;
 	       aluOp <= 2'b00;
 	     end
 	     //and
 	     else if(ins[5:4] == 2'b10)begin
-	       selB <= 1'b0;
+	       selA <= 1'b0;
 	       aluOp <= 2'b01;
 	     end
 	     //or
 	     else if(ins[5:4] == 2'b11)begin
-	       selB <= 1'b0;
+	       selA <= 1'b0;
 	       aluOp <= 2'b10;
 	     end
-	   end
-	   ACU2:begin
-	     regWrite = 1'b1;
+	     WAsel <= 1'b0;
+	     WDsel <= 1'b1;
+	     regWrite <= 1'b1;
 	     CZNld <= 1'b1;
 	   end
-	   ADDR1:begin
-	     TRld <= 1'b1;
-	     end
+	   
 	   LW1:begin
 	     IorD <= 1'b1;
 	     memRead <= 1'b1;
@@ -162,27 +148,28 @@ module controller(ins,clk,rst,selA, selB,IorD,memRead,memWrite,pcWrite,IRld,TRld
 	    IorD <= 1'b1;
 	    memRead <= 1'b1;
 	    MDRld <= 1'b1;
+ 	  end
+	  ADDR3:begin
 	    RA2sel <= 1'b1;
-	    WAsel <= 1'b1;
-	    WDsel <= 1'b1;
 	    selB <= 1'b0;
 	    selA <= 1'b0;
 	    if(ins[5] == 1'b0)
 	      aluOp <= 2'b00;
 	    else if(ins[5] == 1'b1)
 	      aluOp <= 2'b01;
- 	  end
-	  ADDR3:
+	    WAsel <= 1'b1;
+	    WDsel <= 1'b1;
 	    regWrite <= 1'b1;
+	    CZNld <= 1'b1;
+	  end
  	  SW:begin
-	    TRld <= 1'b1;
 	    selB <= 1'b1;
 	    IorD <= 1'b1;
 	    memWrite <= 1'b1;
 	  end
 	  DI:
 	    DIld <= 1'b1;
-	endcase 
+	endcase
  end
  
  always @(posedge clk)begin
